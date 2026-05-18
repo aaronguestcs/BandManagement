@@ -6,6 +6,18 @@ export default function Sidebar() {
       <nav className="space-y-2">
         <NavLink to="/dashboard">Dashboard</NavLink>
       </nav>
+      <nav className="space-y-2">
+        <NavLink to="song-library">Song Library</NavLink>
+      </nav>
+      <nav className="space-y-2">
+        <NavLink to="setlists">Setlists</NavLink>
+      </nav>
+      <nav className="space-y-2">
+        <NavLink to="gigs">Gigs</NavLink>
+      </nav>
+      <nav className="space-y-2">
+        <NavLink to="band-view">Band View</NavLink>
+      </nav>
     </aside>
   )
 }
