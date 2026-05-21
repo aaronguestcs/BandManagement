@@ -79,7 +79,7 @@ User
 
 ---
 
-## MVP Features (in priority order)
+## MVP Features
 
 1. **Authentication** — Sign up, log in, log out. User owns their band's data.
 2. **Band Dashboard** — Central home view: band name, upcoming gigs, active setlists, song count.
@@ -98,6 +98,51 @@ User
 - Use `useEffect` + `fetch` (or axios) for API calls
 - Lift state up when multiple components need the same data
 - The Setlist Builder will require drag-and-drop state management — treat song order as a piece of React state (an ordered array of song IDs)
+
+---
+
+## UI & Styling Conventions
+
+Established in `SongLibraryPage.jsx`. Follow these patterns on all pages for visual consistency.
+
+### Page shell
+- Outermost wrapper: `max-w-4xl`
+- Header row: `flex items-center justify-between mb-6`
+- Page title: `text-3xl font-bold`
+- Primary header action button: `variant="outline"`
+
+### Tables
+- Table: `w-full text-sm`
+- Header row: `border-b text-left text-gray-500`, cells: `pb-2 font-medium`
+- Data rows: `border-b last:border-0 hover:bg-gray-50`
+- Primary cell (title/name): `py-3 font-medium`
+- Secondary cells: `py-3 text-gray-600`
+- Destructive row action: `text-xs text-red-400 hover:text-red-600 transition-colors`
+- Empty state: `text-gray-400 text-sm`
+
+### Dialogs
+- Dialog width: `max-w-md`
+- Form body spacing: `space-y-4 pt-2`
+- Field label: `text-sm font-medium text-gray-700`
+- Field wrapper: `space-y-1`
+- Compact multi-field row: `grid grid-cols-3 gap-3`
+- Action button row: `flex gap-2 pt-2` — primary button gets `flex-1`, cancel is `variant="outline"`
+
+### Dropdowns / overlays
+- Container: `relative max-w-lg mb-8`
+- Dropdown panel: `absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden`
+- Dropdown row: `flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-0 transition-colors`
+
+### Color palette
+| Use | Class |
+|-----|-------|
+| Muted / empty state text | `text-gray-400` |
+| Secondary / supporting text | `text-gray-600` |
+| Labels | `text-gray-700` |
+| Table / column headers | `text-gray-500` |
+| Destructive action | `text-red-400 hover:text-red-600` |
+| Row hover | `hover:bg-gray-50` |
+| Overlay borders | `border-gray-200` |
 
 ---
 
