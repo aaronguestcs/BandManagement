@@ -38,6 +38,8 @@ admin_engine.dispose()
 from database import engine, Base
 import models  # importing models registers them with Base so create_all knows about them
 
+print("Dropping existing tables...")
+Base.metadata.drop_all(engine)
 print("Creating tables...")
 Base.metadata.create_all(engine)
 

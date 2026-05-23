@@ -1,10 +1,14 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 const API = "http://localhost:8000"
 
-export default function BandCreationPage({ setBandCreated }) {
+export default function BandCreationPage({ bandCreated, setBandCreated, userId }) {
+    const navigate = useNavigate()
+    if (bandCreated) navigate("/dashboard")
+    else console.log("No band found for user — showing band creation page.")
     const [name, setName] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -17,11 +21,13 @@ export default function BandCreationPage({ setBandCreated }) {
             const res = await fetch(`${API}/bands/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: name.trim(), user_id: 1 }), // TODO: Add user ID dynamically
+                body: JSON.stringify({ name: name.trim(), user_id: userId }), 
             })
             if (!res.ok) throw new Error()
-            setBandCreated(true)
-        } catch {
+            setBandCreated()
+            navigate("/dashboard")
+        } catch(error) {
+            console.error("Error creating band:", error)
             setError("Something went wrong — check that the backend is running.")
         } finally {
             setLoading(false)

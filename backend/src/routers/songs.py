@@ -5,7 +5,7 @@ import httpx
 import os
 
 from database import SessionLocal
-from models import Song
+from models import Song, SongCreate
 
 router = APIRouter(prefix="/songs", tags=["songs"])
 
@@ -22,15 +22,6 @@ def get_db():
 # Pydantic validates incoming JSON before it ever touches the database.
 # Fields with None defaults are optional — useful for songs that don't have
 # key/bpm data yet.
-class SongCreate(BaseModel):
-    title: str
-    artist: str
-    band_id: int
-    key: str | None = None
-    bpm: int | None = None
-    duration: str | None = None  # stored as "3:45" string
-    notes: str | None = None
-
 
 # --- Discogs search proxy ---
 # We call Discogs from here (server-side) so the token never reaches the browser.

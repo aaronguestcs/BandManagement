@@ -1,11 +1,9 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import SessionLocal
-from models import Band
 from routers.songs import router as songs_router
+from routers.bands import router as bands_router
 
 app = FastAPI()
-app.include_router(songs_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,11 +13,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# ADD ENDPOINTS
+app.include_router(songs_router)
+app.include_router(bands_router)

@@ -18,38 +18,22 @@ const USER_ID = () => {
 }
 
 export default function App() {
-  const [loggedIn, setLoggedIn] = useState(true)
-  const [bandCreated, setBandCreated] = useState(false)
-  const [userData, setUserData] = useState(null)
+  const [bandCreated, setBandCreated] = useState(true)
 
   useEffect(() => {
-    // Check for band creation status via FastAPI call
-    fetch(`${API}/band-created`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.band_created) {
-          setBandCreated(true);
-        }
-      })
-      .catch(error => {
-        console.error("Error checking band creation status:", error);
-      });
-  }, []);
+    async function checkBandStatus() {
+      try {
+        const res = await fetch(`${API}/bands/?user_id=${USER_ID()}`)
+        const bands = await res.json()
+        setBandCreated((bands.length > 0))
+      } catch (err) {
+        console.error("Error checking band status:", err)
+      }
+    }
+    checkBandStatus()
+  }, [])
 
-  useEffect(() => {
-    if (!loggedIn) return
-
-    // Fetch user data (including band info) on app load
-    fetch(`${API}/users/${USER_ID()}`)
-      .then(response => response.json())
-      .then(data => {
-        setUserData(data)
-      })
-      .catch(error => {
-        console.error("Error fetching user data:", error);
-      });
-  }, []);
-
+ // TODO: Route to login page if not logged in, and handle authentication flow
   return (
     <BrowserRouter>
       <Routes>
@@ -61,10 +45,11 @@ export default function App() {
             <Route path="band-view" element={<BandViewPage />} />
             <Route path="gigs" element={<GigsPage />} />
             <Route path="setlists" element={<SetlistsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         ) : (
           <>
-            <Route path="create-band" element={<BandCreationPage setBandCreated={setBandCreated} />} />
+            <Route path="create-band" element={<BandCreationPage setBandCreated={() => setBandCreated(true)} bandCreated={bandCreated} userId={USER_ID()} />} />
             <Route path="*" element={<Navigate to="/create-band" replace />} />
           </>
         )}
