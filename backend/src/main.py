@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.songs import router as songs_router
 from routers.bands import router as bands_router
+from routers.setlists import router as setlists_router
 
 app = FastAPI()
 
@@ -15,3 +16,4 @@ app.add_middleware(
 
 app.include_router(songs_router)
 app.include_router(bands_router)
+app.include_router(setlists_router)

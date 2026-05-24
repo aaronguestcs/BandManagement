@@ -27,3 +27,4 @@ def create_band(payload: BandCreate, db: Session = Depends(get_db)):
 def get_bands(user_id: int, db: Session = Depends(get_db)):
     return db.query(Band).filter(Band.user_id == user_id).all()
 
+

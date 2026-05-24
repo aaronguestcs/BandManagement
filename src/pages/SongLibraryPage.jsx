@@ -7,30 +7,42 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import Field from "@/components/ui/field"
 
 // Hardcoded to band 1 until auth is implemented
-const BAND_ID = 1
-
-const API = "http://localhost:8000"
 
 const EMPTY_FORM = { title: "", artist: "", key: "", bpm: "", duration: "", notes: "" }
 
-export default function SongLibraryPage() {
+export default function SongLibraryPage({ userId, API }) {
     const [query, setQuery] = useState("")
     const [searchResults, setSearchResults] = useState([])
     const [isSearching, setIsSearching] = useState(false)
 
+    const [bandId, setBandId] = useState(null)
     const [songs, setSongs] = useState([])
     const [dialogOpen, setDialogOpen] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
+    const [editingId, setEditingId] = useState(null)
 
-    // Load saved songs on mount
+    // Resolve the band ID for this user once on mount
     useEffect(() => {
-        fetch(`${API}/songs/?band_id=${BAND_ID}`)
+        if (!userId) return
+        fetch(`${API}/bands/?user_id=${userId}`)
+            .then(r => r.json())
+            .then(bands => {
+                if (bands.length > 0) setBandId(bands[0].id)
+            })
+            .catch(() => {})
+    }, [userId])
+
+    // Load songs once we have a band ID
+    useEffect(() => {
+        if (!bandId) return
+        fetch(`${API}/songs/?band_id=${bandId}`)
             .then(r => r.json())
             .then(setSongs)
-            .catch(() => {}) // table may not exist yet
-    }, [])
+            .catch(() => {})
+    }, [bandId])
 
     // Debounced Discogs search — waits 350ms after the user stops typing
     // before firing the request. The cleanup function cancels the pending
@@ -71,22 +83,49 @@ export default function SongLibraryPage() {
     }
 
     function handleOpenBlankForm() {
+        setEditingId(null)
         setForm(EMPTY_FORM)
         setDialogOpen(true)
     }
 
-    async function handleSaveSong() {
-        const res = await fetch(`${API}/songs/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                ...form,
-                bpm: form.bpm ? parseInt(form.bpm) : null,
-                band_id: BAND_ID,
-            }),
+    function handleEditSong(song) {
+        setEditingId(song.id)
+        setForm({
+            title: song.title,
+            artist: song.artist,
+            key: song.key || "",
+            bpm: song.bpm ?? "",
+            duration: song.duration || "",
+            notes: song.notes || "",
         })
-        const saved = await res.json()
-        setSongs(prev => [...prev, saved])
+        setDialogOpen(true)
+    }
+
+    async function handleSaveSong() {
+        const body = JSON.stringify({
+            ...form,
+            bpm: form.bpm ? parseInt(form.bpm) : null,
+            band_id: bandId,
+        })
+
+        if (editingId) {
+            const res = await fetch(`${API}/songs/${editingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body,
+            })
+            const updated = await res.json()
+            setSongs(prev => prev.map(s => s.id === editingId ? updated : s))
+        } else {
+            const res = await fetch(`${API}/songs/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body,
+            })
+            const saved = await res.json()
+            setSongs(prev => [...prev, saved])
+        }
+
         setDialogOpen(false)
     }
 
@@ -172,7 +211,13 @@ export default function SongLibraryPage() {
                                 <td className="py-3 text-gray-600">{song.key || "—"}</td>
                                 <td className="py-3 text-gray-600">{song.bpm || "—"}</td>
                                 <td className="py-3 text-gray-600">{song.duration || "—"}</td>
-                                <td className="py-3 text-right">
+                                <td className="py-3 text-right flex items-center justify-end gap-3">
+                                    <button
+                                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                        onClick={() => handleEditSong(song)}
+                                    >
+                                        Edit
+                                    </button>
                                     <button
                                         className="text-xs text-red-400 hover:text-red-600 transition-colors"
                                         onClick={() => handleDeleteSong(song.id)}
@@ -190,7 +235,7 @@ export default function SongLibraryPage() {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Add Song to Library</DialogTitle>
+                        <DialogTitle>{editingId ? "Edit Song" : "Add Song to Library"}</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 pt-2">
@@ -249,7 +294,7 @@ export default function SongLibraryPage() {
                                 onClick={handleSaveSong}
                                 disabled={!form.title || !form.artist}
                             >
-                                Add to Library
+                                {editingId ? "Save Changes" : "Add to Library"}
                             </Button>
                             <Button variant="outline" onClick={() => setDialogOpen(false)}>
                                 Cancel
@@ -258,15 +303,6 @@ export default function SongLibraryPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
-    )
-}
-
-function Field({ label, children }) {
-    return (
-        <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-700">{label}</label>
-            {children}
         </div>
     )
 }

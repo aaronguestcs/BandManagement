@@ -67,3 +67,7 @@ class SongCreate(BaseModel):
     bpm: int | None = None
     duration: str | None = None  # stored as "3:45" string
     notes: str | None = None
+
+class SetlistCreate(BaseModel):
+    name: str
+    band_id: int

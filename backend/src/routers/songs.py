@@ -96,6 +96,23 @@ def create_song(song_data: SongCreate, db: Session = Depends(get_db)):
     return song
 
 
+# --- Update a song ---
+@router.put("/{song_id}")
+def update_song(song_id: int, song_data: SongCreate, db: Session = Depends(get_db)):
+    song = db.query(Song).filter(Song.id == song_id).first()
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+    song.title = song_data.title
+    song.artist = song_data.artist
+    song.key = song_data.key
+    song.bpm = song_data.bpm
+    song.duration = song_data.duration
+    song.notes = song_data.notes
+    db.commit()
+    db.refresh(song)
+    return song
+
+
 # --- Delete a song ---
 @router.delete("/{song_id}")
 def delete_song(song_id: int, db: Session = Depends(get_db)):
