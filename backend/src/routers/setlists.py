@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import SessionLocal
-# from models import BandCreate, Setlist, SetlistCreate, SetlistSong, SetlistSongCreate
-from models import Setlist, SetlistCreate
+from models import Setlist, SetlistCreate, SetlistSong, SetlistSongOut
 
 router = APIRouter(prefix="/setlists", tags=["setlists"])
 
@@ -27,3 +26,12 @@ def create_setlist(payload: SetlistCreate, db: Session = Depends(get_db)):
 @router.get("/")
 def get_setlists(band_id: int, db: Session = Depends(get_db)):
     return db.query(Setlist).filter(Setlist.band_id == band_id).all()
+
+@router.get("/songs/", response_model=list[SetlistSongOut])
+def get_setlist_songs(band_id: int, db: Session = Depends(get_db)):
+    return (
+        db.query(SetlistSong)
+        .filter(SetlistSong.band_id == band_id)
+        .options(joinedload(SetlistSong.song))
+        .all()
+    )

@@ -28,14 +28,22 @@ const DUMMY_SETLISTS = [
     },
 ]
 
+const EMPTY_FORM = {
+    name: "",
+    songs: [],
+}
+
 export default function SetlistsPage({ bandId, API }) {
     const [expanded, setExpanded] = useState({})
-    const [dialogOpen, setDialogOpen] = useState(false)
+    const [addDialogOpen, setAddDialogOpen] = useState(false)
+    const [configDialogOpen, setConfigDialogOpen] = useState(false)
     const [setlists, setSetlists] = useState([])
     const [newName, setNewName] = useState("")
+    const [setlistSongs, setSetlistSongs] = useState([])
+    const [setlistDict, setSetlistDict] = useState({})
+    const [editingId, setEditingId] = useState(null)
 
-    useEffect(() => {
-        async function fetchSetlists() {
+    async function fetchSetlists() {
             try {
                 const res = await fetch(`${API}/setlists/?band_id=${bandId}`)
                 const data = await res.json()
@@ -44,13 +52,34 @@ export default function SetlistsPage({ bandId, API }) {
                 console.error("Error fetching setlists:", err)
             }
         }
-        if (bandId) {
-            fetchSetlists()
+
+    async function fetchSetlistSongs() {
+            try {
+                const res = await fetch(`${API}/setlist/songs/?band_id=${bandId}`)
+                const data = await res.json()
+                setSetlistSongs(data, res)
+            }
+            catch (err) {
+                console.error("Error fetching setlist songs:", err)
+            }
         }
-        else {
-            setSetlists(DUMMY_SETLISTS)
-        }
-    }, [])
+
+    useEffect(() => {
+        if (!bandId) return
+        fetchSetlists()
+        fetchSetlistSongs()
+    }, [bandId])
+
+    useEffect(() => { 
+        if (!setlistSongs.length) return
+        const newDict = {}
+        setlists.forEach(setlist => {
+            const songs = setlistSongs.filter(setlistSong => setlistSong.setlist_id === setlist.id) //map(setlistSong => setlistSong.song_id)
+            const sortedSongs = songs.toSorted((a, b) => a.position - b.position)
+            newDict[setlist.id] = songs // Array of setListSong objects (inlcuding song data via relationship)
+        })
+        setSetlistDict(newDict)
+    }, [setlists])
 
     async function handleSaveSetlist() {
         const body = JSON.stringify({
@@ -82,62 +111,74 @@ export default function SetlistsPage({ bandId, API }) {
             // }
 
         })
-        setDialogOpen(false)
+        fetchSetlists()
+        setAddDialogOpen(false)
 
     }
 
     function toggleExpand(id) {
         setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+        map(setlists.find)
     }
 
     return (
         <div className="max-w-4xl">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold">Setlists</h1>
-                <Button onClick={() => setDialogOpen(true)} variant="outline">
+                <Button onClick={() => setAddDialogOpen(true)} variant="outline">
                     + New Setlist
                 </Button>
             </div>
 
             <div className="space-y-2">
-                {DUMMY_SETLISTS.map(setlist => (
-                    <div key={setlist.id} className="border rounded-md overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-                            <span className="font-medium">{setlist.name}</span>
-                            <button
-                                className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors"
-                                onClick={() => toggleExpand(setlist.id)}
-                            >
-                                {expanded[setlist.id] ? "COLLAPSE" : "EXPAND"}
-                            </button>
-                        </div>
+                {setlists.map(setlist => (
+                    <div key={setlist.id}>
+                        <div className="border rounded-md overflow-hidden">
+                            <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
 
-                        {expanded[setlist.id] && (
-                            <div className="border-t px-4 py-3 bg-gray-50">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b text-left text-gray-500">
-                                            <th className="pb-2 font-medium w-8">#</th>
-                                            <th className="pb-2 font-medium">Title</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {setlist.songs.map((song, i) => (
-                                            <tr key={i} className="border-b last:border-0 hover:bg-white">
-                                                <td className="py-2 text-gray-400">{i + 1}</td>
-                                                <td className="py-2 font-medium">{song}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                <span className="font-medium">{setlist.name}</span>
+
+                                <button
+                                    className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors"
+                                    onClick={() => setlist.songs[0] && toggleExpand(setlist.id)} // Only allow expanding if there are songs in the setlist
+                                >
+                                    {expanded[setlist.id] ? "COLLAPSE" : "EXPAND"}
+                                </button>
                             </div>
-                        )}
+                            <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+                                <button className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors">
+                                    Configure
+                                </button>
+                            </div>
+
+
+                            {expanded[setlist.id] && (
+                                <div className="border-t px-4 py-3 bg-gray-50">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b text-left text-gray-500">
+                                                <th className="pb-2 font-medium w-8">#</th>
+                                                <th className="pb-2 font-medium">Title</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {setlist.songs[0] && setlistSongs.filter(song => song.setlist_id === setlist.id).map((song, i) => (
+                                                <tr key={i} className="border-b last:border-0 hover:bg-white">
+                                                    <td className="py-2 text-gray-400">{i + 1}</td>
+                                                    <td className="py-2 font-medium">{song.title}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
 
             {/* Add / edit dialog */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Create New Setlist</DialogTitle>
@@ -150,7 +191,29 @@ export default function SetlistsPage({ bandId, API }) {
                             <Button onClick={handleSaveSetlist}>
                                 Create Setlist
                             </Button>
-                            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+            {/* Add / edit dialog */}
+            <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Configure Setlist</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-2">
+                        <Field label="Name">
+
+                        </Field>
+                        <div className="flex gap-2 pt-4">
+                            {/* TODO: Implement setlist configuration options and functionality */}
+                            <Button onClick={() => setConfigDialogOpen(false)}>
+                                Save Changes
+                            </Button>
+                            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
                                 Cancel
                             </Button>
                         </div>

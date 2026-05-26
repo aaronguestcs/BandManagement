@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import relationship
 from database import Base
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class User(Base):
     __tablename__ = 'users'
@@ -38,6 +38,8 @@ class SetlistSong(Base):
     setlist_id = Column(Integer, ForeignKey('setlists.id'), nullable=False)
     song_id = Column(Integer, ForeignKey('songs.id'), nullable=False)
     position = Column(Integer, nullable=False) # can use SORT BY to order display of songs in setlist
+    band_id = Column(Integer, ForeignKey('bands.id')) # Redundant but simplifies queries to have band_id here
+    song = relationship("Song") # Establish relationship to Song for easier access to song details when fetching setlist songs
 
 class Member(Base):
     __tablename__ = 'members'
@@ -71,3 +73,24 @@ class SongCreate(BaseModel):
 class SetlistCreate(BaseModel):
     name: str
     band_id: int
+
+class SongOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    artist: str
+    key: str | None = None
+    bpm: int | None = None
+    duration: str | None = None
+    notes: str | None = None
+
+class SetlistSongOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    setlist_id: int
+    song_id: int
+    position: int
+    band_id: int | None = None
+    song: SongOut
