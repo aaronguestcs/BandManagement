@@ -7,6 +7,7 @@ import SongLibraryPage from "./pages/SongLibraryPage"
 import BandViewPage from "./pages/BandViewPage"
 import GigsPage from './pages/GigsPage'
 import SetlistsPage from './pages/SetlistsPage'
+import SetlistBuilderPage from './pages/SetlistBuilderPage'
 import BandCreationPage from "./pages/BandCreationPage"
 import AccountCreationPage from "./pages/AccountCreationPage"
 
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="band-view" element={<BandViewPage userId={userId} API={API} />} />
             <Route path="gigs" element={<GigsPage userId={userId} API={API} />} />
             <Route path="setlists" element={<SetlistsPage bandId={bandId} API={API} />} />
+            <Route path="setlists/:id" element={<SetlistBuilderPage bandId={bandId} API={API} />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         ) : (

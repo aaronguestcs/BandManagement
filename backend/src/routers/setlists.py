@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 
 from database import SessionLocal
-from models import Setlist, SetlistCreate, SetlistSong, SetlistSongOut
+from models import Setlist, SetlistCreate, SetlistSong, SetlistSongCreate, SetlistSongOut
 
 router = APIRouter(prefix="/setlists", tags=["setlists"])
 
@@ -35,3 +35,28 @@ def get_setlist_songs(band_id: int, db: Session = Depends(get_db)):
         .options(joinedload(SetlistSong.song))
         .all()
     )
+
+@router.post("/{setlist_id}/songs")
+def add_song_to_setlist(setlist_id: int, payload: SetlistSongCreate, db: Session = Depends(get_db)):
+    position = db.query(SetlistSong).filter(SetlistSong.setlist_id == setlist_id).count() + 1
+    entry = SetlistSong(
+        setlist_id=setlist_id,
+        song_id=payload.song_id,
+        band_id=payload.band_id,
+        position=position,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+@router.delete("/{setlist_id}/songs/{song_id}")
+def remove_song_from_setlist(setlist_id: int, song_id: int, db: Session = Depends(get_db)):
+    entry = db.query(SetlistSong).filter(
+        SetlistSong.setlist_id == setlist_id,
+        SetlistSong.song_id == song_id,
+    ).first()
+    if entry:
+        db.delete(entry)
+        db.commit()
+    return {"ok": True}

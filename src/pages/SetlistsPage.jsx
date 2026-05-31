@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,59 +11,36 @@ import {
 } from "@/components/ui/dialog"
 import Field from "@/components/ui/field"
 
-const DUMMY_SETLISTS = [
-    {
-        id: 1,
-        name: "Friday Night at The Pour House",
-        songs: ["Sweet Home Alabama", "Mr. Brightside", "Don't Stop Believin'", "Wagon Wheel"],
-    },
-    {
-        id: 2,
-        name: "Saturday Acoustic Set",
-        songs: ["Blackbird", "Landslide", "Fast Car"],
-    },
-    {
-        id: 3,
-        name: "New Year's Eve Closer",
-        songs: ["Bohemian Rhapsody", "September", "Africa", "Living on a Prayer", "Don't Stop Me Now"],
-    },
-]
-
-const EMPTY_FORM = {
-    name: "",
-    songs: [],
-}
 
 export default function SetlistsPage({ bandId, API }) {
+    const navigate = useNavigate()
     const [expanded, setExpanded] = useState({})
     const [addDialogOpen, setAddDialogOpen] = useState(false)
-    const [configDialogOpen, setConfigDialogOpen] = useState(false)
     const [setlists, setSetlists] = useState([])
     const [newName, setNewName] = useState("")
     const [setlistSongs, setSetlistSongs] = useState([])
     const [setlistDict, setSetlistDict] = useState({})
-    const [editingId, setEditingId] = useState(null)
 
     async function fetchSetlists() {
-            try {
-                const res = await fetch(`${API}/setlists/?band_id=${bandId}`)
-                const data = await res.json()
-                setSetlists(data)
-            } catch (err) {
-                console.error("Error fetching setlists:", err)
-            }
+        try {
+            const res = await fetch(`${API}/setlists/?band_id=${bandId}`)
+            const data = await res.json()
+            setSetlists(data)
+        } catch (err) {
+            console.error("Error fetching setlists:", err)
         }
+    }
 
     async function fetchSetlistSongs() {
-            try {
-                const res = await fetch(`${API}/setlist/songs/?band_id=${bandId}`)
-                const data = await res.json()
-                setSetlistSongs(data, res)
-            }
-            catch (err) {
-                console.error("Error fetching setlist songs:", err)
-            }
+        try {
+            const res = await fetch(`${API}/setlists/songs/?band_id=${bandId}`)
+            const data = await res.json()
+            setSetlistSongs(data)
         }
+        catch (err) {
+            console.error("Error fetching setlist songs:", err)
+        }
+    }
 
     useEffect(() => {
         if (!bandId) return
@@ -70,18 +48,18 @@ export default function SetlistsPage({ bandId, API }) {
         fetchSetlistSongs()
     }, [bandId])
 
-    useEffect(() => { 
+    useEffect(() => {
         if (!setlistSongs.length) return
         const newDict = {}
         setlists.forEach(setlist => {
             const songs = setlistSongs.filter(setlistSong => setlistSong.setlist_id === setlist.id) //map(setlistSong => setlistSong.song_id)
-            const sortedSongs = songs.toSorted((a, b) => a.position - b.position)
-            newDict[setlist.id] = songs // Array of setListSong objects (inlcuding song data via relationship)
+            newDict[setlist.id] = songs // Song object embedded in setlistSong object
         })
         setSetlistDict(newDict)
     }, [setlists])
 
     async function handleSaveSetlist() {
+        if (newName === "") return
         const body = JSON.stringify({
             name: newName,
             band_id: bandId,
@@ -116,9 +94,12 @@ export default function SetlistsPage({ bandId, API }) {
 
     }
 
+    function handleConfig(id) {
+        navigate(`/setlists/${id}`)
+    }
+
     function toggleExpand(id) {
         setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
-        map(setlists.find)
     }
 
     return (
@@ -131,7 +112,9 @@ export default function SetlistsPage({ bandId, API }) {
             </div>
 
             <div className="space-y-2">
-                {setlists.map(setlist => (
+                {setlists.map(setlist => {
+                    const hasSongs = setlistSongs.some(ss => ss.setlist_id === setlist.id)
+                    return (
                     <div key={setlist.id}>
                         <div className="border rounded-md overflow-hidden">
                             <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
@@ -139,14 +122,14 @@ export default function SetlistsPage({ bandId, API }) {
                                 <span className="font-medium">{setlist.name}</span>
 
                                 <button
-                                    className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors"
-                                    onClick={() => setlist.songs[0] && toggleExpand(setlist.id)} // Only allow expanding if there are songs in the setlist
+                                    className={`text-xs font-semibold tracking-wide transition-colors ${hasSongs ? "text-gray-500 hover:text-gray-800" : "text-gray-300 cursor-default"}`}
+                                    onClick={() => hasSongs && toggleExpand(setlist.id)}
                                 >
                                     {expanded[setlist.id] ? "COLLAPSE" : "EXPAND"}
                                 </button>
                             </div>
                             <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-                                <button className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors">
+                                <button onClick={() => handleConfig(setlist.id)} className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors">
                                     Configure
                                 </button>
                             </div>
@@ -162,10 +145,10 @@ export default function SetlistsPage({ bandId, API }) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {setlist.songs[0] && setlistSongs.filter(song => song.setlist_id === setlist.id).map((song, i) => (
+                                            {setlistSongs.filter(setlistSong => setlistSong.setlist_id === setlist.id).toSorted((a, b) => a.position - b.position).map((setlistSong, i) => (
                                                 <tr key={i} className="border-b last:border-0 hover:bg-white">
                                                     <td className="py-2 text-gray-400">{i + 1}</td>
-                                                    <td className="py-2 font-medium">{song.title}</td>
+                                                    <td className="py-2 font-medium">{setlistSong.song.title}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -174,7 +157,8 @@ export default function SetlistsPage({ bandId, API }) {
                             )}
                         </div>
                     </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Add / edit dialog */}
@@ -192,28 +176,6 @@ export default function SetlistsPage({ bandId, API }) {
                                 Create Setlist
                             </Button>
                             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-            {/* Add / edit dialog */}
-            <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Configure Setlist</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-2">
-                        <Field label="Name">
-
-                        </Field>
-                        <div className="flex gap-2 pt-4">
-                            {/* TODO: Implement setlist configuration options and functionality */}
-                            <Button onClick={() => setConfigDialogOpen(false)}>
-                                Save Changes
-                            </Button>
-                            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
                                 Cancel
                             </Button>
                         </div>

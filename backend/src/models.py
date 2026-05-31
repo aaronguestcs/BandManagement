@@ -74,6 +74,10 @@ class SetlistCreate(BaseModel):
     name: str
     band_id: int
 
+class SetlistSongCreate(BaseModel):
+    song_id: int
+    band_id: int
+
 class SongOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
