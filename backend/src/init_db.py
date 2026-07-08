@@ -6,7 +6,6 @@ Safe to run on every deploy — create_all only adds tables that don't
 exist yet and never touches existing tables or data.
 """
 import dotenv
-
 # Loads .env locally if present; no-ops on Render where env vars are injected directly.
 dotenv.load_dotenv()
 
