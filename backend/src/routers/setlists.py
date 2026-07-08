@@ -77,11 +77,13 @@ def reorder_setlist_songs(setlist_id: int, payload: SetlistReorder, db: Session 
     db.commit()  # one commit = one transaction for all N updates (all-or-nothing)
     return {"ok": True}
 
-@router.delete("/{setlist_id}/songs/{song_id}")
-def remove_song_from_setlist(setlist_id: int, song_id: int, db: Session = Depends(get_db)):
+@router.delete("/{setlist_id}/songs/{setlist_song_id}")
+def remove_song_from_setlist(setlist_id: int, setlist_song_id: int, db: Session = Depends(get_db)):
+    # Delete by the SetlistSong row id, not song_id — duplicate songs share a
+    # song_id, so filtering by it would ambiguously match both rows.
     entry = db.query(SetlistSong).filter(
         SetlistSong.setlist_id == setlist_id,
-        SetlistSong.song_id == song_id,
+        SetlistSong.id == setlist_song_id,
     ).first()
     if entry:
         db.delete(entry)

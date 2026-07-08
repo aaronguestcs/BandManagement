@@ -58,7 +58,7 @@ function SortableSongRow({ ss, index, onRemove }) {
             <td className="py-3 text-gray-600">{ss.song.artist}</td>
             <td className="py-3 text-right">
                 <button
-                    onClick={() => onRemove(ss.song_id)}
+                    onClick={() => onRemove(ss.id)}
                     className="text-xs text-red-400 hover:text-red-600 transition-colors"
                 >
                     Remove
@@ -169,13 +169,15 @@ export default function SetlistBuilderPage({ bandId, API }) {
         persistOrder(updated)
     }
 
-    async function handleRemoveSong(songId) {
+    // Keyed off the SetlistSong row id (ss.id), NOT song_id — two of the same
+    // song share a song_id, so removing by song_id would drop both rows.
+    async function handleRemoveSong(setlistSongId) {
         // 1. Optimistically drop it from the displayed list
-        const updated = setlistSongs.filter(ss => ss.song_id !== songId)
+        const updated = setlistSongs.filter(ss => ss.id !== setlistSongId)
         setSetlistSongs(updated)
 
         // 2. Actually delete the row, then renumber the survivors 0,1,2…
-        await fetch(`${API}/setlists/${setlistId}/songs/${songId}`, { method: "DELETE" })
+        await fetch(`${API}/setlists/${setlistId}/songs/${setlistSongId}`, { method: "DELETE" })
         persistOrder(updated)
     }
 

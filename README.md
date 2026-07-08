@@ -1,16 +1,34 @@
-# React + Vite
+# [Project Name]
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+One-line description — what it does and who it's for (your cover band's setlists/gigs/finances).
 
-Currently, two official plugins are available:
+## Live Demo
+[link] — once deployed and UI is tightened
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Screenshot / GIF
+(one good screenshot beats a paragraph of description)
 
-## React Compiler
+## Features
+- Bullet list, concrete: setlist builder, gig scheduling, finance tracking, etc.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
+- Frontend: React (+ any state mgmt/styling libs)
+- Backend: FastAPI
+- Database: Supabase (Postgres)
+- Deployment: Vercel (frontend), Render (backend)
 
-## Expanding the ESLint configuration
+## Architecture
+Short paragraph or diagram: how frontend talks to backend, how backend talks to Supabase,
+auth flow if any. This is the section that shows you understand your own system —
+worth a bit more effort than the rest.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Data Model
+Brief entity list or an ER diagram: bands, songs, setlists, gigs, transactions,
+and how they relate.
+
+## Running Locally
+Setup steps — env vars needed (Supabase keys, etc.), install, run frontend, run backend.
+
+## What I'd Do Next
+Optional but nice: shows self-awareness. E.g. "auth for multi-band support,"
+"tests," "mobile layout."
