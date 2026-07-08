@@ -14,8 +14,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # Matches every Vercel URL for this project (production, -git-main-, previews)
-    # plus localhost for dev. Regex avoids chasing one exact origin string.
+    # Use regex to allow all subdomains of band-management.vercel.app and localhost with any port
     allow_origin_regex=r"https://band-management.*\.vercel\.app|http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],

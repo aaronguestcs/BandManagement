@@ -1,3 +1,4 @@
+// Currently unused -- could be a future addition for a sort of dashboard
 export default function BandViewPage() {
     return (
         <>

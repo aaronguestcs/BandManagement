@@ -9,33 +9,19 @@ import {
 } from "@/components/ui/dialog"
 import Field from "@/components/ui/field"
 
-// Hardcoded to band 1 until auth is implemented
-
 const EMPTY_FORM = { title: "", artist: "", key: "", bpm: "", duration: "", notes: "" }
+const TIMEOUT_QUERY_MS = 350
 
-export default function SongLibraryPage({ userId, API }) {
+export default function SongLibraryPage({ bandId, API }) {
     const [query, setQuery] = useState("")
     const [searchResults, setSearchResults] = useState([])
     const [isSearching, setIsSearching] = useState(false)
 
-    const [bandId, setBandId] = useState(null)
     const [songs, setSongs] = useState([])
     const [dialogOpen, setDialogOpen] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
     const [editingId, setEditingId] = useState(null)
 
-    // Resolve the band ID for this user once on mount
-    useEffect(() => {
-        if (!userId) return
-        fetch(`${API}/bands/?user_id=${userId}`)
-            .then(r => r.json())
-            .then(bands => {
-                if (bands.length > 0) setBandId(bands[0].id)
-            })
-            .catch(() => {})
-    }, [userId])
-
-    // Load songs once we have a band ID
     useEffect(() => {
         if (!bandId) return
         fetch(`${API}/songs/?band_id=${bandId}`)
@@ -44,15 +30,14 @@ export default function SongLibraryPage({ userId, API }) {
             .catch(() => {})
     }, [bandId])
 
-    // Debounced Discogs search — waits 350ms after the user stops typing
-    // before firing the request. The cleanup function cancels the pending
-    // timeout if the user types again before 350ms, preventing stale results.
+    // Searching expects at least 2 chars.
     useEffect(() => {
         if (query.length < 2) {
             setSearchResults([])
             return
         }
 
+        // Debounce the search so we don't spam the API on every keystroke
         setIsSearching(true)
         const timer = setTimeout(async () => {
             try {
@@ -62,13 +47,14 @@ export default function SongLibraryPage({ userId, API }) {
             } finally {
                 setIsSearching(false)
             }
-        }, 350)
+        }, TIMEOUT_QUERY_MS)
 
         return () => clearTimeout(timer)
     }, [query])
 
     function handleSelectResult(result) {
-        // Pre-fill the dialog with whatever Deezer gave us; user can edit before saving
+        // Pre-fill the dialog with whatever Deezer gave us. User can edit before saving.
+        // Deezer can only give a title, artist, duration, and thumbnail
         setForm({
             title: result.title,
             artist: result.artist,

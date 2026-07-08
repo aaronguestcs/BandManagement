@@ -25,6 +25,11 @@ dist-ssr
 .env*
 CLAUDE.md
 commands.txt
-__pycache__/**
-venv/**
-public/**
+__pycache__/
+*.pyc
+venv/
+public/
+*.egg-info/
+.pytest_cache/
+*.db
+*.sqlite3

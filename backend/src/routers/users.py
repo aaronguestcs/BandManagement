@@ -16,7 +16,6 @@ def get_db():
         db.close()
 
 
-# Must come before /{user_id} — otherwise "me" gets parsed as an int and 422s.
 @router.get("/me", response_model=UserOut)
 def read_me(user: User = Depends(get_current_user)):
     return user

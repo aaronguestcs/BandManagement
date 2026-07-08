@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom"
 import Sidebar from "./Sidebar"
-import { useState, useEffect } from "react"
 
 export default function AppLayout({ bandName }) {
   return (

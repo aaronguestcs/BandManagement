@@ -88,7 +88,7 @@ export default function SetlistBuilderPage({ bandId, API }) {
     )
 
     async function fetchSetlistName() {
-        const res = await fetch(`${API}/setlists/${setlistId}`) // Fetch current setlist
+        const res = await fetch(`${API}/setlists/${setlistId}`)
         const data = await res.json()
         if (data) setSetlistName(data.name)
     }
@@ -116,8 +116,6 @@ export default function SetlistBuilderPage({ bandId, API }) {
         fetchSongLibrary()
     }, [bandId, setlistId])
 
-    // Open the inline editor, seeding the draft with the current name so the
-    // user edits from what's there rather than a blank field.
     function startEditingName() {
         setNameDraft(setlistName)
         setIsEditingName(true)
@@ -125,12 +123,12 @@ export default function SetlistBuilderPage({ bandId, API }) {
 
     async function handleRenameSetlist() {
         const trimmed = nameDraft.trim()
-        // Ignore empty names or a no-op rename — just close the editor.
+        // Ignore empty or unchanged names
         if (!trimmed || trimmed === setlistName) {
             setIsEditingName(false)
             return
         }
-        // Optimistically show the new name, then persist it to the backend.
+        // Optimistically show new name -> send it to backend
         setSetlistName(trimmed)
         setIsEditingName(false)
         await fetch(`${API}/setlists/${setlistId}`, {
@@ -140,9 +138,7 @@ export default function SetlistBuilderPage({ bandId, API }) {
         })
     }
 
-    // Single source of truth for order: whenever the local list changes (add,
-    // remove, or drag), push the whole ordered list of SetlistSong ids to the
-    // reorder endpoint, which renumbers position 0,1,2… to match.
+    // Sends current order of setlist to backend to be reorder. Done after dragging/removing/adding setlist songs
     function persistOrder(songs) {
         return fetch(`${API}/setlists/${setlistId}/reorder`, {
             method: "PUT",
@@ -152,7 +148,7 @@ export default function SetlistBuilderPage({ bandId, API }) {
     }
 
     async function handleAddSong(songId) {
-        // 1. Insert on the backend so we get a real row id (needed for dragging + reorder)
+        // Insert song on the backend for a real row id
         const res = await fetch(`${API}/setlists/${setlistId}/songs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -161,36 +157,33 @@ export default function SetlistBuilderPage({ bandId, API }) {
         const entry = await res.json()
         const song = songLibrary.find(s => s.id === songId) // nested detail, from state
 
-        // 2. Optimistically append to the displayed list
+        // Optimistically append to the displayed list
         const updated = [...setlistSongs, { ...entry, song }]
         setSetlistSongs(updated)
 
-        // 3. Push the authoritative order (this sets the new row's real position)
+        // Set new row order in database 
         persistOrder(updated)
     }
 
-    // Keyed off the SetlistSong row id (ss.id), NOT song_id — two of the same
-    // song share a song_id, so removing by song_id would drop both rows.
     async function handleRemoveSong(setlistSongId) {
-        // 1. Optimistically drop it from the displayed list
+        // Optimistically remove song from the displayed list
         const updated = setlistSongs.filter(ss => ss.id !== setlistSongId)
         setSetlistSongs(updated)
 
-        // 2. Actually delete the row, then renumber the survivors 0,1,2…
+        // Actually delete the row, then reorder the remaining rows
         await fetch(`${API}/setlists/${setlistId}/songs/${setlistSongId}`, { method: "DELETE" })
         persistOrder(updated)
     }
 
-    // Fires when a drag finishes. We reorder local state instantly (so the UI
-    // feels snappy), then persist the final order to the backend in one call.
+    // Fires when a drag finishes. Reorders local display instantly for smoothness
     async function handleDragEnd(event) {
         const { active, over } = event
-        if (!over || active.id === over.id) return // dropped in place — nothing to do
+        if (!over || active.id === over.id) return // dropped in place
 
         const oldIndex = setlistSongs.findIndex(ss => ss.id === active.id)
         const newIndex = setlistSongs.findIndex(ss => ss.id === over.id)
         const reordered = arrayMove(setlistSongs, oldIndex, newIndex)
-        setSetlistSongs(reordered) // optimistic update — don't wait on the server
+        setSetlistSongs(reordered)
         persistOrder(reordered)
     }
 
@@ -198,7 +191,8 @@ export default function SetlistBuilderPage({ bandId, API }) {
         setlistSongs.reduce((sum, ss) => sum + durationToSeconds(ss.song.duration), 0)
     )
 
-    const filteredLibrary = songLibrary.filter(song =>
+    // case-sensitive search on title or artist
+    const filteredLibrary = songLibrary.filter(song => 
         song.title.toLowerCase().includes(librarySearch.toLowerCase()) ||
         song.artist.toLowerCase().includes(librarySearch.toLowerCase())
     )

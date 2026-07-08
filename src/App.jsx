@@ -19,7 +19,6 @@ export default function App() {
   const [bandName, setBandName] = useState("")
   const [authChecked, setAuthChecked] = useState(false)
 
-  // Load the band for a user; flips bandCreated so routing knows where to send them.
   function loadBand(id) {
     return fetch(`${API}/bands/?user_id=${id}`)
       .then(res => res.json())
@@ -64,7 +63,7 @@ export default function App() {
     setBandCreated(true)
   }
 
-  if (!authChecked) return null  // ponytail: brief blank while token is validated; swap for a spinner if you want
+  if (!authChecked) return null
 
   return (
     <BrowserRouter>
@@ -78,7 +77,7 @@ export default function App() {
           <Route path="/" element={<AppLayout bandName={bandName} />}>
             <Route index element={<Navigate to="/account" replace />} />
             <Route path="account" element={<AccountPage userId={userId} API={API} onLogout={handleLogout} />} />
-            <Route path="song-library" element={<SongLibraryPage userId={userId} API={API} />} />
+            <Route path="song-library" element={<SongLibraryPage bandId={bandId} API={API} />} />
             <Route path="gigs" element={<GigsPage bandId={bandId} API={API} />} />
             <Route path="setlists" element={<SetlistsPage bandId={bandId} API={API} />} />
             <Route path="setlists/:id" element={<SetlistBuilderPage bandId={bandId} API={API} />} />

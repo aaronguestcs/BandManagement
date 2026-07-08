@@ -19,7 +19,6 @@ export default function SetlistsPage({ bandId, API }) {
     const [setlists, setSetlists] = useState([])
     const [newName, setNewName] = useState("")
     const [setlistSongs, setSetlistSongs] = useState([])
-    const [setlistDict, setSetlistDict] = useState({})
 
     async function fetchSetlists() {
         try {
@@ -48,16 +47,6 @@ export default function SetlistsPage({ bandId, API }) {
         fetchSetlistSongs()
     }, [bandId])
 
-    useEffect(() => {
-        if (!setlistSongs.length) return
-        const newDict = {}
-        setlists.forEach(setlist => {
-            const songs = setlistSongs.filter(setlistSong => setlistSong.setlist_id === setlist.id) //map(setlistSong => setlistSong.song_id)
-            newDict[setlist.id] = songs // Song object embedded in setlistSong object
-        })
-        setSetlistDict(newDict)
-    }, [setlists])
-
     async function handleSaveSetlist() {
         if (newName === "") return
         const body = JSON.stringify({
@@ -68,30 +57,9 @@ export default function SetlistsPage({ bandId, API }) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body,
-
-
-            // if (editingId) {
-            //     const res = await fetch(`${API}/songs/${editingId}`, {
-            //         method: "PUT",
-            //         headers: { "Content-Type": "application/json" },
-            //         body,
-            //     })
-            //     const updated = await res.json()
-            //     setSongs(prev => prev.map(s => s.id === editingId ? updated : s))
-            // } else {
-            //     const res = await fetch(`${API}/songs/`, {
-            //         method: "POST",
-            //         headers: { "Content-Type": "application/json" },
-            //         body,
-            //     })
-            //     const saved = await res.json()
-            //     setSongs(prev => [...prev, saved])
-            // }
-
         })
         fetchSetlists()
         setAddDialogOpen(false)
-
     }
 
     function handleConfig(id) {

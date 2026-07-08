@@ -23,16 +23,12 @@ import { format } from "date-fns"
 
 import { useEffect, useState } from "react"
 
-// Native <select> styled to match the shadcn Input (there's no shadcn Select in
-// the project yet). Pulled out so both dropdowns share one look.
 const selectClass =
     "w-full h-9 rounded-md border border-gray-200 bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
 
-// The blank shape of the Add Gig form. Keys mirror the GigUpdate fields (the
-// user-entered ones). Kept at module scope so it's a single source of truth for
-// both the initial state and resetting the form after submit.
+// Shape of gig form for default state and reset.
 const emptyGigForm = {
-    dateTime: undefined, // held as a real Date; formatted to a string on submit
+    dateTime: undefined, // held as a real Date and formatted to a string on submit.
     venue: "",
     setlistId: "",
     pay: "",
@@ -47,22 +43,12 @@ export default function GigsPage({ bandId, API }) {
     const [currentDateTime, setCurrentDateTime] = useState(new Date());
     const [totalRevenue, setTotalRevenue] = useState(0);
 
-
-    // Dialog open/close state. Controlling it lets us close the dialog
-    // ourselves after a successful submit.
+    // shadcn Dialog open/close state
     const [open, setOpen] = useState(false)
 
-    // All user-entered fields live in one object (mirrors GigUpdate). date_time
-    // is held as a real Date and only formatted to the "YYYY-MM-DD HH:MM" string
-    // the backend expects on submit.
     const [formData, setFormData] = useState(emptyGigForm)
-
-    // null = the dialog is adding a new gig; an id = editing that gig. Drives
-    // whether submit POSTs or PUTs, and the dialog's title/button labels.
     const [editingId, setEditingId] = useState(null)
 
-    // Generic updater: writes one field while preserving the rest. `[field]`
-    // is a computed key so the same helper works for every input.
     function updateField(field, value) {
         setFormData(prev => ({ ...prev, [field]: value }))
     }
@@ -75,26 +61,6 @@ export default function GigsPage({ bandId, API }) {
         }
 
         return currentDateTime > target
-    }
-
-    function timeUntil(dateTimeStr, currentDateTime) {
-        // Parse "YYYY-MM-DD HH:MM" into a valid Date
-        const target = new Date(dateTimeStr.replace(' ', 'T'));
-
-        if (isNaN(target.getTime())) {
-        return { error: 'Invalid date format' };
-        }
-
-        const diffMs = target - currentDateTime;
-        const isPast = diffMs < 0;
-        const absMs = Math.abs(diffMs);
-
-        const totalHours = Math.floor(absMs / (1000 * 60 * 60));
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
-
-        const message = days + " days, " + hours + " hours";
-        return { days, hours, isPast, message };
     }
 
     function displayDateTime(dateTimeStr) {
@@ -139,12 +105,9 @@ export default function GigsPage({ bandId, API }) {
 
     function getSetlistName(setlistId) {
         const setlist = setlists.find(s => s.id === parseInt(setlistId));
-        return setlist ? setlist.name : "";
+        return setlist ? setlist.name : ""; // Leave blank if no seltist attatched
     }
 
-    // Sum every song's duration for the given setlist. setlistSongs holds all of
-    // the band's setlist-song rows (each with its nested song), so we just filter
-    // to this setlist and fold the durations.
     function getSetlistDuration(setlistId) {
         if (!setlistId) return "";
         const secs = setlistSongs
@@ -178,11 +141,13 @@ export default function GigsPage({ bandId, API }) {
         fetch(`${API}/gigs/?band_id=${bandId}`)
             .then(res => res.json())
             .then(data => setGigs(data || []))
-        // Setlists power the "attach a setlist" dropdown.
+
+        // Setlists for dropdown on gig form
         fetch(`${API}/setlists/?band_id=${bandId}`)
             .then(res => res.json())
             .then(data => setSetlists(data))
-        // All setlist-song rows for the band; used to total each setlist's duration.
+
+        // Used to total setlist duration via individual song durations
         fetch(`${API}/setlists/songs/?band_id=${bandId}`)
             .then(res => res.json())
             .then(data => setSetlistSongs(data || []))
@@ -211,8 +176,9 @@ export default function GigsPage({ bandId, API }) {
     function openEditGig(gig) {
         setEditingId(gig.id)
         setFormData({
-            // date_time comes back as "YYYY-MM-DD HH:MM"; the picker wants a Date.
+            // Formats date_time string from API to a Date object for the DateTimePicker.
             dateTime: gig.date_time ? new Date(gig.date_time.replace(" ", "T")) : undefined,
+            
             venue: gig.venue || "",
             setlistId: gig.setlist_id ? String(gig.setlist_id) : "",
             pay: gig.pay ?? "",
@@ -228,17 +194,14 @@ export default function GigsPage({ bandId, API }) {
     }
 
     function formatPay(amount) {
-        return `$${amount.toLocaleString('en-US')}`;
-}
+        return `$${amount.toLocaleString('en-US')}`; // Gives commas every 3 digits and '$' prefix
+    }
 
     async function handleSubmitGig(e) {
         e.preventDefault()
 
-        if (!formData.dateTime) return // date/time is required
+        if (!formData.dateTime) return // Require date/time
 
-        // The form collects the GigUpdate fields; band_id is added here from
-        // props (not typed by the user) to form the full GigCreate payload.
-        // Empty strings become null so we don't send blank values for optional columns.
         const payload = {
             band_id: bandId,
             date_time: formData.dateTime ? format(formData.dateTime, "yyyy-MM-dd HH:mm") : null,
@@ -377,7 +340,7 @@ export default function GigsPage({ bandId, API }) {
                             const tb = new Date(b.date_time.replace(" ", "T"));
                             const aPast = ta < currentDateTime;
                             const bPast = tb < currentDateTime;
-                            // Upcoming before passed; upcoming soonest-first, passed most-recent-first.
+                            // Maps as: Upcoming before passed, upcoming soonest-first, passed most-recent-first.
                             if (aPast !== bPast) return aPast ? 1 : -1;
                             return aPast ? tb - ta : ta - tb;
                         }).map((gig) => (

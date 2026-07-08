@@ -1,14 +1,9 @@
 """
-Auth: register + login issue a signed JWT; get_current_user validates it.
-
-The flow (frontend -> here):
-  1. POST /auth/register or /auth/login  ->  { access_token, user }
-  2. Frontend stores access_token, sends it as `Authorization: Bearer <token>`
-  3. Any route that Depends(get_current_user) decodes the token back to a User
-
-The token is just a signed statement "user id N, valid until T". Signed with
-SECRET, so the server can trust it without a DB session lookup on every request.
+Auth: register + login issue a signed JWT, get_current_user validates it.
+Issues a Bearer token for the client to use in future requests. Token signed with SECRET key set in env.
+Token is marked with expiry of 7 days, after which the client requires a new login to get a new token.
 """
+
 import os
 from datetime import datetime, timedelta, timezone
 
@@ -24,11 +19,10 @@ from models import User, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-SECRET = os.getenv("SECRET") or "dev-secret-change-me"  # ponytail: dev fallback; set SECRET in .env before deploying
+SECRET = os.getenv("SECRET") or "dev-secret-change-me"
 ALGORITHM = "HS256"
-TOKEN_TTL_HOURS = 24 * 7
+TOKEN_TTL_HOURS = 24 * 7 # 7 days for token expiry
 
-# tokenUrl is only used to label the "Authorize" button in Swagger docs.
 oauth2 = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
@@ -39,8 +33,6 @@ def get_db():
     finally:
         db.close()
 
-
-# bcrypt caps input at 72 bytes and now raises past it, so truncate first.
 def hash_pw(pw: str) -> str:
     return bcrypt.hashpw(pw.encode()[:72], bcrypt.gensalt()).decode()
 

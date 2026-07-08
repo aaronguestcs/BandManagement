@@ -36,7 +36,6 @@ def create_gig(gig_data: GigCreate, db: Session = Depends(get_db)):
     return gig
 
 
-# --- Update a gig ---
 @router.put("/{gig_id}")
 def update_gig(gig_id: int, gig_data: GigUpdate, db: Session = Depends(get_db)):
     gig = db.query(Gig).filter(Gig.id == gig_id).first()
@@ -53,7 +52,6 @@ def update_gig(gig_id: int, gig_data: GigUpdate, db: Session = Depends(get_db)):
     return gig
 
 
-# --- Delete a gig ---
 @router.delete("/{gig_id}")
 def delete_gig(gig_id: int, db: Session = Depends(get_db)):
     gig = db.query(Gig).filter(Gig.id == gig_id).first()

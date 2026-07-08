@@ -15,15 +15,7 @@ def get_db():
     finally:
         db.close()
 
-
-# --- Pydantic schema for creating a song ---
-# Pydantic validates incoming JSON before it ever touches the database.
-# Fields with None defaults are optional — useful for songs that don't have
-# key/bpm data yet.
-
-# --- Deezer search proxy ---
-# Deezer's search API is public (no token/auth), so this proxy exists mainly to
-# keep the frontend talking to one origin and to reshape results for our form.
+# --- Deezer API song search --- 
 @router.get("/search")
 async def search_songs(q: str = Query(..., min_length=2)):
     async with httpx.AsyncClient() as client:
@@ -52,13 +44,11 @@ async def search_songs(q: str = Query(..., min_length=2)):
     return results
 
 
-# --- List all songs for a band ---
 @router.get("/")
 def list_songs(band_id: int = Query(...), db: Session = Depends(get_db)):
     return db.query(Song).filter(Song.band_id == band_id).all()
 
 
-# --- Add a song to the library ---
 @router.post("/")
 def create_song(song_data: SongCreate, db: Session = Depends(get_db)):
     song = Song(
@@ -76,7 +66,6 @@ def create_song(song_data: SongCreate, db: Session = Depends(get_db)):
     return song
 
 
-# --- Update a song ---
 @router.put("/{song_id}")
 def update_song(song_id: int, song_data: SongCreate, db: Session = Depends(get_db)):
     song = db.query(Song).filter(Song.id == song_id).first()
@@ -93,14 +82,12 @@ def update_song(song_id: int, song_data: SongCreate, db: Session = Depends(get_d
     return song
 
 
-# --- Delete a song ---
 @router.delete("/{song_id}")
 def delete_song(song_id: int, db: Session = Depends(get_db)):
     song = db.query(Song).filter(Song.id == song_id).first()
     if not song:
         raise HTTPException(status_code=404, detail="Song not found")
-    # Remove this song from any setlists first, or the FK on
-    # setlist_songs.song_id blocks the delete (IntegrityError).
+    # If a song is deleted, also delete any SetlistSong entries that have matching song ids.
     db.query(SetlistSong).filter(SetlistSong.song_id == song_id).delete()
     db.delete(song)
     db.commit()

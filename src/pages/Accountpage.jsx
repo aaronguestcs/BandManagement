@@ -67,7 +67,7 @@ export default function AccountPage({ userId, API, onLogout }) {
                     )}
                 </div>
 
-                {/* Read-only account fields */}
+                {/* Read-only fields */}
                 <div className="space-y-1">
                     <p className="text-sm font-medium text-gray-700">Username</p>
                     <span className="text-lg">{user?.username || "—"}</span>

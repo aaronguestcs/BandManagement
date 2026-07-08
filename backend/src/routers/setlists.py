@@ -6,14 +6,12 @@ from models import Setlist, SetlistCreate, SetlistUpdate, SetlistSong, SetlistSo
 
 router = APIRouter(prefix="/setlists", tags=["setlists"])
 
-
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
 
 @router.post("/")
 def create_setlist(payload: SetlistCreate, db: Session = Depends(get_db)):
@@ -35,11 +33,10 @@ def get_setlist(setlist_id: int, db: Session = Depends(get_db)):
 def update_setlist(setlist_id: int, payload: SetlistUpdate, db: Session = Depends(get_db)):
     setlist = db.query(Setlist).filter(Setlist.id == setlist_id).first()
     if setlist is None:
-        # 404 tells the client the id doesn't exist, vs silently doing nothing.
         raise HTTPException(status_code=404, detail="Setlist not found")
     setlist.name = payload.name
-    db.commit()       # persist the change
-    db.refresh(setlist)  # reload so we return the updated row
+    db.commit()      
+    db.refresh(setlist) 
     return setlist
 
 @router.get("/songs/", response_model=list[SetlistSongOut])
@@ -67,20 +64,18 @@ def add_song_to_setlist(setlist_id: int, payload: SetlistSongCreate, db: Session
 
 @router.put("/{setlist_id}/reorder")
 def reorder_setlist_songs(setlist_id: int, payload: SetlistReorder, db: Session = Depends(get_db)):
-    # Renumber every row from the incoming order. The array index becomes the
-    # new position, so the client sends the whole desired order in one call.
+    # Updates order by taking indexed position from frontend and applying to the SetlistSong rows in DB.
     for index, ss_id in enumerate(payload.ordered_ids):
         db.query(SetlistSong).filter(
             SetlistSong.id == ss_id,
-            SetlistSong.setlist_id == setlist_id,  # scope guard: only touch THIS setlist's rows
+            SetlistSong.setlist_id == setlist_id,
         ).update({"position": index})
-    db.commit()  # one commit = one transaction for all N updates (all-or-nothing)
+    db.commit() 
     return {"ok": True}
 
 @router.delete("/{setlist_id}/songs/{setlist_song_id}")
 def remove_song_from_setlist(setlist_id: int, setlist_song_id: int, db: Session = Depends(get_db)):
-    # Delete by the SetlistSong row id, not song_id — duplicate songs share a
-    # song_id, so filtering by it would ambiguously match both rows.
+    # Deletes by setlistsong id to allow for duplicate songs in a setlist
     entry = db.query(SetlistSong).filter(
         SetlistSong.setlist_id == setlist_id,
         SetlistSong.id == setlist_song_id,

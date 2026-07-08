@@ -1,12 +1,8 @@
 """
-Initialize the database and create any missing tables.
-Run from the backend/src directory: python init_db.py
-
-Safe to run on every deploy — create_all only adds tables that don't
-exist yet and never touches existing tables or data.
+Run on every new deploy -- Check for any missing tables and create them if needed.
 """
 import dotenv
-# Loads .env locally if present; no-ops on Render where env vars are injected directly.
+
 dotenv.load_dotenv()
 
 from database import engine, Base
@@ -15,6 +11,6 @@ import models  # importing models registers them with Base so create_all knows a
 print("Creating any missing tables...")
 Base.metadata.create_all(engine)
 
-print("Done. Tables created:")
+print("Done. Active tables:")
 for table in Base.metadata.sorted_tables:
     print(f"  - {table.name}")
