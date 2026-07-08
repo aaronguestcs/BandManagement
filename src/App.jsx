@@ -10,7 +10,7 @@ import SetlistBuilderPage from './pages/SetlistBuilderPage'
 import BandCreationPage from "./pages/BandCreationPage"
 import AccountCreationPage from "./pages/AccountCreationPage"
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000"
+const API = "https://bandmanagement.onrender.com"
 
 export default function App() {
   const [bandCreated, setBandCreated] = useState(false)
