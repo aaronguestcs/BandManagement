@@ -25,3 +25,5 @@ dist-ssr
 .env*
 CLAUDE.md
 commands.txt
+__pycache__/**
+venv/**
