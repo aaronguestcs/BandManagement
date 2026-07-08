@@ -27,3 +27,4 @@ CLAUDE.md
 commands.txt
 __pycache__/**
 venv/**
+public/**
