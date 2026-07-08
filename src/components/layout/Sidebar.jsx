@@ -1,10 +1,13 @@
 import { NavLink } from "react-router-dom"
 
-export default function Sidebar() {
+export default function Sidebar({ bandName }) {
   return (
     <aside className="w-64 border-r p-4">
+      <div>
+        {bandName && <p className="text-lg font-semibold">{bandName}</p>}
+      </div>
       <nav className="space-y-2">
-        <NavLink to="/dashboard">Dashboard</NavLink>
+        <NavLink to="/account">Account</NavLink>
       </nav>
       <nav className="space-y-2">
         <NavLink to="song-library">Song Library</NavLink>
@@ -14,9 +17,6 @@ export default function Sidebar() {
       </nav>
       <nav className="space-y-2">
         <NavLink to="gigs">Gigs</NavLink>
-      </nav>
-      <nav className="space-y-2">
-        <NavLink to="band-view">Band View</NavLink>
       </nav>
     </aside>
   )

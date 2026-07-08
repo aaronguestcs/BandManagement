@@ -1,12 +1,13 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export default function BandCreationPage({ bandCreated, setBandCreated, userId, API }) {
+export default function BandCreationPage({ bandCreated, onBandCreated, userId, API }) {
     const navigate = useNavigate()
-    if (bandCreated) navigate("/dashboard")
-    else console.log("No band found for user — showing band creation page.")
+    useEffect(() => {
+        if (bandCreated) navigate("/account")
+    }, [bandCreated, navigate])
     const [name, setName] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -22,8 +23,9 @@ export default function BandCreationPage({ bandCreated, setBandCreated, userId, 
                 body: JSON.stringify({ name: name.trim(), user_id: userId }), 
             })
             if (!res.ok) throw new Error()
-            setBandCreated()
-            navigate("/dashboard")
+            const band = await res.json()
+            onBandCreated(band)
+            navigate("/account")
         } catch(error) {
             console.error("Error creating band:", error)
             setError("Something went wrong — check that the backend is running.")

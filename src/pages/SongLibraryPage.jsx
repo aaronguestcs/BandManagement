@@ -68,13 +68,13 @@ export default function SongLibraryPage({ userId, API }) {
     }, [query])
 
     function handleSelectResult(result) {
-        // Pre-fill the dialog with whatever Discogs gave us; user can edit before saving
+        // Pre-fill the dialog with whatever Deezer gave us; user can edit before saving
         setForm({
             title: result.title,
             artist: result.artist,
             key: "",
             bpm: "",
-            duration: "",
+            duration: result.duration || "",
             notes: "",
         })
         setSearchResults([])
@@ -146,7 +146,7 @@ export default function SongLibraryPage({ userId, API }) {
             {/* Search bar */}
             <div className="relative max-w-lg mb-8">
                 <Input
-                    placeholder="Search Discogs for a song or artist..."
+                    placeholder="Search for a song or artist..."
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     autoComplete="off"
@@ -160,7 +160,7 @@ export default function SongLibraryPage({ userId, API }) {
                         )}
                         {searchResults.map(result => (
                             <button
-                                key={result.discogs_id}
+                                key={result.deezer_id}
                                 className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-gray-50 border-b last:border-0 transition-colors"
                                 onClick={() => handleSelectResult(result)}
                             >
@@ -177,7 +177,7 @@ export default function SongLibraryPage({ userId, API }) {
                                     <p className="font-medium text-sm truncate">{result.title}</p>
                                     <p className="text-xs text-gray-500 truncate">
                                         {result.artist}
-                                        {result.year ? ` · ${result.year}` : ""}
+                                        {result.duration ? ` · ${result.duration}` : ""}
                                     </p>
                                 </div>
                             </button>

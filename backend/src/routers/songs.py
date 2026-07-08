@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 import httpx
-import os
 
 from database import SessionLocal
-from models import Song, SongCreate
+from models import Song, SongCreate, SetlistSong
 
 router = APIRouter(prefix="/songs", tags=["songs"])
 
@@ -23,50 +21,32 @@ def get_db():
 # Fields with None defaults are optional — useful for songs that don't have
 # key/bpm data yet.
 
-# --- Discogs search proxy ---
-# We call Discogs from here (server-side) so the token never reaches the browser.
+# --- Deezer search proxy ---
+# Deezer's search API is public (no token/auth), so this proxy exists mainly to
+# keep the frontend talking to one origin and to reshape results for our form.
 @router.get("/search")
-async def search_discogs(q: str = Query(..., min_length=2)):
-    token = os.getenv("DISCOGS_TOKEN")
-    if not token:
-        raise HTTPException(status_code=500, detail="DISCOGS_TOKEN not set in environment")
-
+async def search_songs(q: str = Query(..., min_length=2)):
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            "https://api.discogs.com/database/search",
-            params={"q": q, "type": "master", "per_page": 8},
-            headers={
-                "Authorization": f"Discogs token={token}",
-                # Discogs requires a descriptive User-Agent or requests get throttled
-                "User-Agent": "BandManagementApp/1.0 +https://github.com/local/band-management",
-            },
+            "https://api.deezer.com/search",
+            params={"q": q, "limit": 8},
         )
 
     if response.status_code != 200:
-        raise HTTPException(status_code=502, detail="Discogs API error")
+        raise HTTPException(status_code=502, detail="Deezer API error")
 
-    data = response.json()
     results = []
-
-    for item in data.get("results", []):
-        raw_title = item.get("title", "")
-
-        # Discogs format is "Artist Name - Release Title".
-        # We split on the first " - " to pre-fill the form fields.
-        if " - " in raw_title:
-            parts = raw_title.split(" - ", 1)
-            artist = parts[0].strip()
-            title = parts[1].strip()
-        else:
-            artist = ""
-            title = raw_title
+    for item in response.json().get("data", []):
+        # Deezer gives duration in seconds; convert to the M:SS the form expects.
+        secs = item.get("duration") or 0
+        duration = f"{secs // 60}:{secs % 60:02d}" if secs else ""
 
         results.append({
-            "discogs_id": item.get("id"),
-            "title": title,
-            "artist": artist,
-            "year": item.get("year", ""),
-            "thumb": item.get("thumb", ""),
+            "deezer_id": item.get("id"),
+            "title": item.get("title", ""),
+            "artist": item.get("artist", {}).get("name", ""),
+            "duration": duration,
+            "thumb": item.get("album", {}).get("cover_small", ""),
         })
 
     return results
@@ -119,6 +99,9 @@ def delete_song(song_id: int, db: Session = Depends(get_db)):
     song = db.query(Song).filter(Song.id == song_id).first()
     if not song:
         raise HTTPException(status_code=404, detail="Song not found")
+    # Remove this song from any setlists first, or the FK on
+    # setlist_songs.song_id blocks the delete (IntegrityError).
+    db.query(SetlistSong).filter(SetlistSong.song_id == song_id).delete()
     db.delete(song)
     db.commit()
     return {"ok": True}

@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Band, BandCreate
+from models import Band, BandCreate, BandUpdate
 
 router = APIRouter(prefix="/bands", tags=["bands"])
 
@@ -26,5 +26,15 @@ def create_band(payload: BandCreate, db: Session = Depends(get_db)):
 @router.get("/")
 def get_bands(user_id: int, db: Session = Depends(get_db)):
     return db.query(Band).filter(Band.user_id == user_id).all()
+
+@router.put("/{band_id}")
+def update_band(band_id: int, payload: BandUpdate, db: Session = Depends(get_db)):
+    band = db.query(Band).filter(Band.id == band_id).first()
+    if band is None:
+        raise HTTPException(status_code=404, detail="Band not found")
+    band.name = payload.name
+    db.commit()
+    db.refresh(band)
+    return band
 
 

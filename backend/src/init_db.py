@@ -7,7 +7,7 @@ Safe to re-run during development — will wipe and recreate all tables.
 import os
 from pathlib import Path
 
-ADD_DEFAULT_USER = True
+ADD_DEFAULT_USER = False
 ADD_DEFAULT_BAND = False
 
 # Load .env manually since we're running standalone (not through uvicorn)
@@ -39,7 +39,10 @@ from database import engine, Base
 import models  # importing models registers them with Base so create_all knows about them
 
 print("Dropping existing tables...")
-Base.metadata.drop_all(engine)
+# Nuke the whole schema so FK dependencies can't block the wipe.
+with engine.begin() as conn:
+    conn.execute(text("DROP SCHEMA public CASCADE"))
+    conn.execute(text("CREATE SCHEMA public"))
 print("Creating tables...")
 Base.metadata.create_all(engine)
 

@@ -1,4 +1,2 @@
-cd .\backend\
-.\venv\Scripts\Activate.ps1
-cd .\src\  
-uvicorn main:app --reload 
+cd .\backend\src
+..\venv\Scripts\python -m uvicorn main:app --reload
