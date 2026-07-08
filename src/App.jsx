@@ -4,14 +4,13 @@ import { useState, useEffect } from "react"
 import AppLayout from "./components/layout/AppLayout"
 import AccountPage from "./pages/Accountpage"
 import SongLibraryPage from "./pages/SongLibraryPage"
-import BandViewPage from "./pages/BandViewPage"
 import GigsPage from './pages/GigsPage'
 import SetlistsPage from './pages/SetlistsPage'
 import SetlistBuilderPage from './pages/SetlistBuilderPage'
 import BandCreationPage from "./pages/BandCreationPage"
 import AccountCreationPage from "./pages/AccountCreationPage"
 
-const API = "http://localhost:8000"
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 export default function App() {
   const [bandCreated, setBandCreated] = useState(false)
