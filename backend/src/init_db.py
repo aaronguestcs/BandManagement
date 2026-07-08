@@ -1,14 +1,12 @@
 """
-One-time script to initialize (or reset) all database tables.
+Initialize the database and create any missing tables.
 Run from the backend/src directory: python init_db.py
 
-Safe to re-run during development — will wipe and recreate all tables.
+Safe to run on every deploy — create_all only adds tables that don't
+exist yet and never touches existing tables or data.
 """
 import os
 from pathlib import Path
-
-ADD_DEFAULT_USER = False
-ADD_DEFAULT_BAND = False
 
 # Load .env manually since we're running standalone (not through uvicorn)
 env_path = Path(__file__).parent.parent.parent / ".env"
@@ -38,33 +36,9 @@ admin_engine.dispose()
 from database import engine, Base
 import models  # importing models registers them with Base so create_all knows about them
 
-print("Dropping existing tables...")
-# Nuke the whole schema so FK dependencies can't block the wipe.
-with engine.begin() as conn:
-    conn.execute(text("DROP SCHEMA public CASCADE"))
-    conn.execute(text("CREATE SCHEMA public"))
-print("Creating tables...")
+print("Creating any missing tables...")
 Base.metadata.create_all(engine)
 
 print("Done. Tables created:")
 for table in Base.metadata.sorted_tables:
     print(f"  - {table.name}")
-
-
-if ADD_DEFAULT_USER:
-    from sqlalchemy.orm import Session
-    from models import User
-
-    with Session(engine) as session:
-        existing = session.query(User).filter_by(email="guestaaronm@gmail.com").first()
-        if not existing:
-            user = User(username="aaron", email="guestaaronm@gmail.com")
-            session.add(user)
-            session.commit()
-            print(f"Added default user: aaron (guestaaronm@gmail.com)")
-        else:
-            print("Default user already exists, skipping.")
-
-if ADD_DEFAULT_BAND:
-    pass
-
