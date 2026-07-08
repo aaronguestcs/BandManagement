@@ -1,2 +1,0 @@
-cd .\backend\src
-..\venv\Scripts\python -m uvicorn main:app --reload
