@@ -6,12 +6,16 @@ from routers.setlists import router as setlists_router
 from routers.gigs import router as gigs_router
 from routers.users import router as users_router
 from routers.auth import router as auth_router
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"],
+    allow_origins=[os.environ.get("VITE_API_URL")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
