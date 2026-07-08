@@ -1,3 +1,4 @@
+
 # Band Manager Web App
 
 Band Manager makes it easy for small-scale bands to track necessary and important data, such as their finances, past/future gigs, setlists, and song rotation. 
@@ -5,10 +6,12 @@ Band Manager makes it easy for small-scale bands to track necessary and importan
 ## Live Demo
 [Live Demo](https://band-management-pied.vercel.app)
 
-## Screenshot
+<img width="2555" height="759" alt="BMAppGigsSS" src="https://github.com/user-attachments/assets/4dc82416-fb2e-4184-8275-91d1d4da07dc" />
 
 ## Features
-- Bullet list, concrete: setlist builder, gig scheduling, finance tracking, etc.
+- Add and Delete songs from your band's rotation
+- Create and reorder setlists from your song library
+- Manage gig dates, venues, setlists, and finances
 
 ## Tech Stack
 - Frontend: React + Shadcn & Tailwind CSS for styling
