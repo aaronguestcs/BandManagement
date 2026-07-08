@@ -66,6 +66,12 @@ export default function SetlistsPage({ bandId, API }) {
         navigate(`/setlists/${id}`)
     }
 
+    async function handleDelete(id) {
+        await fetch(`${API}/setlists/${id}`, { method: "DELETE" })
+        fetchSetlists()
+        fetchSetlistSongs()
+    }
+
     function toggleExpand(id) {
         setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
     }
@@ -99,6 +105,9 @@ export default function SetlistsPage({ bandId, API }) {
                             <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
                                 <button onClick={() => handleConfig(setlist.id)} className="text-xs font-semibold text-gray-500 hover:text-gray-800 tracking-wide transition-colors">
                                     Configure
+                                </button>
+                                <button onClick={() => handleDelete(setlist.id)} className="text-xs text-red-400 hover:text-red-600 transition-colors">
+                                    Delete
                                 </button>
                             </div>
 

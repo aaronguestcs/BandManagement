@@ -1,19 +1,18 @@
-# [Project Name]
+# Band Manager Web App
 
-One-line description — what it does and who it's for (your cover band's setlists/gigs/finances).
+Band Manager makes it easy for small-scale bands to track necessary and important data, such as their finances, past/future gigs, setlists, and song rotation. 
 
 ## Live Demo
-[link] — once deployed and UI is tightened
+[Live Demo](https://band-management-pied.vercel.app)
 
-## Screenshot / GIF
-(one good screenshot beats a paragraph of description)
+## Screenshot
 
 ## Features
 - Bullet list, concrete: setlist builder, gig scheduling, finance tracking, etc.
 
 ## Tech Stack
-- Frontend: React (+ any state mgmt/styling libs)
-- Backend: FastAPI
+- Frontend: React + Shadcn & Tailwind CSS for styling
+- Backend: FastAPI + SQLAlchemy
 - Database: Supabase (Postgres)
 - Deployment: Vercel (frontend), Render (backend)
 

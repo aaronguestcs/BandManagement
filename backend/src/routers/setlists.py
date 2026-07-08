@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from database import SessionLocal
-from models import Setlist, SetlistCreate, SetlistUpdate, SetlistSong, SetlistSongCreate, SetlistSongOut, SetlistReorder
+from models import Setlist, SetlistCreate, SetlistUpdate, SetlistSong, SetlistSongCreate, SetlistSongOut, SetlistReorder, Gig
 
 router = APIRouter(prefix="/setlists", tags=["setlists"])
 
@@ -38,6 +38,15 @@ def update_setlist(setlist_id: int, payload: SetlistUpdate, db: Session = Depend
     db.commit()      
     db.refresh(setlist) 
     return setlist
+
+@router.delete("/{setlist_id}")
+def delete_setlist(setlist_id: int, db: Session = Depends(get_db)):
+    # Remove child SetlistSong rows and clear the FK on any gig pointing here,
+    db.query(SetlistSong).filter(SetlistSong.setlist_id == setlist_id).delete()
+    db.query(Gig).filter(Gig.setlist_id == setlist_id).update({"setlist_id": None})
+    db.query(Setlist).filter(Setlist.id == setlist_id).delete()
+    db.commit()
+    return {"ok": True}
 
 @router.get("/songs/", response_model=list[SetlistSongOut])
 def get_setlist_songs(band_id: int, db: Session = Depends(get_db)):
