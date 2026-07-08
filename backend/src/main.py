@@ -6,7 +6,6 @@ from routers.setlists import router as setlists_router
 from routers.gigs import router as gigs_router
 from routers.users import router as users_router
 from routers.auth import router as auth_router
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,7 +14,9 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("VITE_API_URL")],
+    # Matches every Vercel URL for this project (production, -git-main-, previews)
+    # plus localhost for dev. Regex avoids chasing one exact origin string.
+    allow_origin_regex=r"https://band-management.*\.vercel\.app|http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
